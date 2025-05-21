@@ -1,47 +1,58 @@
 import React from 'react';
 
 const Navbar = () => {  
+    const [currentTime, setCurrentTime] = React.useState(new Date());
+
+    React.useEffect(() => {
+        const intervalId = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const formattedDateTime = currentTime.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    }) + ', ' + currentTime.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+    });
+
     return (
         <>
-
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#" style={{ marginLeft: "80px" }}>FilmVault</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav marginLeft w-100">
-        <li class="nav-item ms-5">
-          <a class="nav-link" href="#">Product</a>
-        </li>
-        <li class="nav-item ms-5">
-          <a class="nav-link" href="#">About</a>
-        </li>
-        <li class="nav-item ms-5">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item ms-5">
-          <a class="nav-link" href="#">FAQ</a>
-        </li>
-        <li class="nav-item  ms-5">
-          <a class="nav-link" href="#">Contact</a>
-        </li>
-      </ul>
-
-      {/* <i 
-        class="fa fa-search" 
-        
-        style={{ fontSize: "24px", color: "black", marginLeft: "auto", marginRight: "80px",cursor: "pointer" }}
-        aria-hidden="true"
-      ></i> */}
-
-    </div>
-  </div>
-</nav>
+            <nav className="navbar navbar-expand-lg bg-body-tertiary">
+                <div className="container-fluid">
+                    <a className="navbar-brand" href="#" style={{ marginLeft: "80px" }}>FilmStores</a>
+                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span className="navbar-toggler-icon"></span>
+                    </button>
+                    <div className="collapse navbar-collapse" id="navbarNav">
+                        <ul className="navbar-nav w-100">
+                            <li className="nav-item ms-5">
+                                <a className="nav-link" href="#">Home</a>
+                            </li>
+                            <li className="nav-item ms-5">
+                                <a className="nav-link" href="#">Films</a>
+                            </li>
+                            <li className="nav-item ms-5">
+                                <a className="nav-link" href="#">Login</a>
+                            </li>
+                        </ul>
+                        <div className="ms-auto nav-item me-4" style={{ whiteSpace: "nowrap" }}>
+                            <span className="navbar-text">
+                                {formattedDateTime}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
         </>
-      )
-    
+    );
 }  
   
 export default Navbar;
+
