@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom'; // Import useParams and Link
 import { baseURL } from '../common/http-common';
 import defaultImage from '../assets/poster_not_found.png'; // Default image path
-import { Container, Row, Col, Card, CardImg, CardTitle, CardSubtitle, CardText } from 'react-bootstrap';
+import { Container, Row, Col, Card, CardImg } from 'react-bootstrap';
 
 // Define a type for the detailed film object
 type DetailedFilm = {

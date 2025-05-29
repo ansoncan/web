@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import defaultImage from '../assets/poster_not_found.png'; // Default image path
-import PaginationComponent from './PaginationComponent';
 import { baseURL } from '../common/http-common';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
-// Define a type for the film object
+import { Link } from 'react-router-dom';
+import Pagination from 'react-bootstrap/Pagination'; // Import Pagination from react-bootstrap
+
 type Film = {
   _id: string;
   title: string;
@@ -12,22 +12,16 @@ type Film = {
 };
 
 const Card: React.FC = () => {
-  // Use proper types for state
   const [films, setFilms] = useState<Film[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalFilms, setTotalFilms] = useState<number>(0);
 
-  // Memoize the filtered films to avoid re-computing on every render
-  const filteredFilms = useMemo(() => {
-    return films.filter((film) => film.poster !== null && film.poster !== '');
-  }, [films]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${baseURL}/films`);
+        const response = await fetch(`${baseURL}/films`); // Ensure baseURL is defined correctly
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -36,10 +30,12 @@ const Card: React.FC = () => {
         setFilms(data);
       } catch (error: any) {
         setError(error.message);
+        console.error('Fetch error:', error.message); // Log the error for debugging
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -47,38 +43,62 @@ const Card: React.FC = () => {
     setCurrentPage(newPage);
   };
 
-  // Memoize the films to display on the current page
-  const filmsToDisplay = useMemo(() => {
-    const startIndex = (currentPage - 1) * 8;
-    const endIndex = startIndex + 8;
-    return filteredFilms.slice(startIndex, endIndex);
-  }, [currentPage, filteredFilms]);
-
   if (loading) {
-    return <div style={{ display: 'none', color: 'white' }}>Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div style={{ display: 'none', color: 'white' }}>Error: {error}</div>;
+    return <div>Error: {error}</div>;
   }
+
+  // Calculate the films to display for the current page (8 per page)
+  const filmsPerPage = 8;
+  const startIndex = (currentPage - 1) * filmsPerPage;
+  const endIndex = startIndex + filmsPerPage;
+  const currentFilms = films.slice(startIndex, endIndex);
 
   return (
     <div>
       <div className="container">
-        {/* Render Pagination above the list of films */}
-        <PaginationComponent
-          currentPage={currentPage}
-          totalPages={Math.ceil(totalFilms / 8)}
-          onPageChange={handlePageChange}
-        />
+        {/* Centered Pagination */}
+        <div
+          className="d-flex justify-content-center mb-4"
+          style={{ color: 'black' }} // Black text for pagination
+        >
+          <Pagination>
+            <Pagination.First onClick={() => handlePageChange(1)} />
+            <Pagination.Prev
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            />
+            {/* Render page numbers */}
+            {Array.from({ length: Math.ceil(totalFilms / filmsPerPage) }, (_, index) => index + 1).map(
+              (pageNumber) => (
+                <Pagination.Item
+                  key={pageNumber}
+                  active={pageNumber === currentPage}
+                  onClick={() => handlePageChange(pageNumber)}
+                >
+                  {pageNumber}
+                </Pagination.Item>
+              )
+            )}
+            <Pagination.Next
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === Math.ceil(totalFilms / filmsPerPage)}
+            />
+            <Pagination.Last onClick={() => handlePageChange(Math.ceil(totalFilms / filmsPerPage))} />
+          </Pagination>
+        </div>
+
+        {/* Film Cards */}
         <div className="row row-cols-1 row-cols-md-4 g-4" style={{ marginTop: '20px' }}>
-          {filmsToDisplay.map((film) => (
+          {currentFilms.map((film) => (
             <div className="col" key={film._id}>
               <Link to={`/detail/${film._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="card" style={{ height: '550px' }}>
                   <img
                     src={
-                      // Handle invalid poster values
                       film.poster === null || film.poster === '' || film.poster === 'null'
                         ? defaultImage
                         : film.poster
@@ -88,7 +108,6 @@ const Card: React.FC = () => {
                     style={{ height: '450px', objectFit: 'cover' }}
                     title={film.title}
                     onError={(e) => {
-                      // If the image fails to load, set the src to defaultImage
                       (e.target as HTMLImageElement).src = defaultImage;
                     }}
                   />

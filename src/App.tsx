@@ -23,17 +23,35 @@ function App() {
       {loading ? (
         <div className="text-center mt-5">Loading...</div>
       ) : (
-        <>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh', // Ensure the container takes full viewport height
+          }}
+        >
+          {/* Navbar */}
           <Navbar />
-          <div className="container-fluid" style={{ marginTop: '75px' }}>
-            <Routes>
-              <Route path="/" element={<Card />} />
-              <Route path="/detail/:id" element={<Detail />} /> {/* Add route for detail page */}
-              <Route path="/search/:title" element={<Search />} /> {/* Route for Search */}
-            </Routes>
+
+          {/* Main content area */}
+          <div
+            style={{
+              flex: 1, // This will push the footer to the bottom
+              marginTop: '35px',
+            }}
+          >
+            <div className="container-fluid">
+              <Routes>
+                <Route path="/" element={<Card />} />
+                <Route path="/detail/:id" element={<Detail />} /> {/* Add route for detail page */}
+                <Route path="/search/:title" element={<Search />} /> {/* Route for Search */}
+              </Routes>
+            </div>
           </div>
+
+          {/* Footer */}
           <Footer />
-        </>
+        </div>
       )}
     </Router>
   );

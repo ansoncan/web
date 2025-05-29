@@ -34,14 +34,7 @@ const Navbar: React.FC<Props> = ({ setSelectedMonth, clearFilter }) => {
       <div className="container-fluid">
         <div className="d-flex align-items-center">
           {/* FilmStores */}
-          <a href="/filmstores" className="navbar-brand me-2">FilmStores</a>
-          {/* Home */}
-          <ul className="navbar-nav ms-4">
-            <li className="nav-item pe-5">
-              Home
-            </li>
-          </ul>
-
+          <a href="/" className="navbar-brand ms-3">FilmStores</a>
         </div>
 
         {/* Search Form */}
@@ -63,7 +56,6 @@ const Navbar: React.FC<Props> = ({ setSelectedMonth, clearFilter }) => {
           </Dropdown.Toggle>
 
           <Dropdown.Menu>
-            <Dropdown.Item eventKey="">All Months</Dropdown.Item>
             <Dropdown.Item eventKey="January">January</Dropdown.Item>
             <Dropdown.Item eventKey="February">February</Dropdown.Item>
             <Dropdown.Item eventKey="March">March</Dropdown.Item>
