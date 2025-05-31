@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { baseURL } from '../common/http-common';
-import defaultImage from '../assets/poster_not_found.png'; // Default image path
-import { Container, Row, Col, Card, CardImg } from 'react-bootstrap';
-import { ClipLoader } from 'react-spinners'; // Example loading spinner library
+import defaultImage from '../assets/poster_not_found.png';
+import { Container, Row, Col, Card, CardImg, Button, Form, Modal } from 'react-bootstrap';
+import { ClipLoader } from 'react-spinners';
 
-// Define a type for the detailed film object
 type DetailedFilm = {
   title: string;
   year: string;
@@ -18,29 +17,46 @@ type DetailedFilm = {
 };
 
 const Search: React.FC = () => {
-  const { title } = useParams<{ title: string }>(); // Extract the title parameter from the URL
+  const { title } = useParams<{ title: string }>();
   const [film, setFilm] = useState<DetailedFilm | null>(null);
+  const [originalFilm, setOriginalFilm] = useState<DetailedFilm | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    const userType = localStorage.getItem("userType");
+    const authKey = localStorage.getItem("authKey");
+    setIsStaff(userType === "1" && !!authKey);
+  }, []);
 
   useEffect(() => {
     const fetchFilmDetails = async () => {
       try {
-        console.log(`Fetching film details for title: ${title}`); // Debug log
         const response = await fetch(`${baseURL}/ofilm/${title}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data: DetailedFilm = await response.json(); // API returns a single film object
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
 
-        // Check if the data contains the expected fields (e.g. title)
         if (!data || !data.title) {
           setError(true);
           setFilm(null);
-          return; // Exit early if no film found
+          return;
         }
 
-        setFilm(data);
+        const numericRuntime = typeof data.runtime === "string"
+          ? parseInt(data.runtime)
+          : data.runtime;
+
+        const cleanedData: DetailedFilm = {
+          ...data,
+          runtime: isNaN(numericRuntime) ? 0 : numericRuntime,
+        };
+
+        setFilm(cleanedData);
+        setOriginalFilm(cleanedData);
         setError(false);
       } catch (error) {
         console.error('Error fetching film details:', error);
@@ -57,113 +73,158 @@ const Search: React.FC = () => {
     }
   }, [title]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!film) return;
+    const { name, value } = e.target;
+    setFilm({ ...film, [name]: name === "runtime" ? Number(value) : value });
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    if (originalFilm) setFilm(originalFilm);
+    setIsEditing(false);
+  };
+
+  const handleUpdate = async () => {
+    if (!film) return;
+
+    const payload = {
+      title: film.title,
+      year: film.year,
+      runtime: Number(film.runtime),
+      language: film.language,
+      genre: film.genre,
+      director: film.director,
+      poster: film.poster || null,
+    };
+
+    try {
+      const response = await fetch(`${baseURL}/film`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          k: localStorage.getItem("authKey") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setShowSuccess(true);
+        setOriginalFilm(film);
+        setIsEditing(false);
+      } else {
+        const errorText = await response.text();
+        console.error("Failed to add film:", errorText);
+        alert("Failed to add film. Please check the input and try again.");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("An error occurred while adding the film.");
+    } finally {
+      setShowModal(false);
+    }
+  };
+
+  const confirmUpdate = () => setShowModal(true);
+  const cancelModal = () => setShowModal(false);
+
   return (
-    <Container
-      fluid
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        
-        padding: 0, // Remove default padding
-      }}
-    >
+    <Container fluid className="p-0">
       {loading && (
         <div className="text-center mt-5">
-          <ClipLoader color="#000" size={50} /> {/* Loading spinner */}
+          <ClipLoader color="#000" size={50} />
           <p className="mt-3">Searching for the film...</p>
         </div>
       )}
 
       {!loading && (!film || error) && (
-        <div className="d-flex flex-column" style={{ minHeight: '100vh' }}>
-          <div className="text-center mt-5">
-            <h3>No Record Found</h3>
-            <p>Sorry, we couldn't find any films with the provided wording.</p>
-          </div>
-          <div className="text-center px-3 pb-3"> {/* Use mt-auto and padding */}
-            <Link to="/" className="btn btn-primary">
-              Go back
-            </Link>
-          </div>
+        <div className="text-center mt-5">
+          <h3>No Record Found</h3>
+          <p>Sorry, we couldn't find any films with the provided wording.</p>
+          <Link to="/" className="btn btn-primary mt-3">Go back</Link>
         </div>
       )}
 
       {!loading && film && (
-        <Row className="g-0"> {/* Ensure the Row takes full height */}
-          <Col md={3} style={{ position: 'relative' }}> {/* Ensure the Col takes full height */}
-            <Card style={{ width: '100%', height: '100%' }}> {/* Ensure the Card takes full height */}
+        <Row className="g-0">
+          <Col md={3}>
+            <Card style={{ height: '100%' }}>
               <CardImg
                 variant="top"
-                src={film.poster ? film.poster : defaultImage}
-                alt={film.title || 'Film Poster'}
+                src={film.poster || defaultImage}
+                alt={film.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
-                  // If the image fails to load, set the src to defaultImage
                   (e.target as HTMLImageElement).src = defaultImage;
                 }}
               />
             </Card>
-            
           </Col>
-          <Col md={5}> {/* Ensure the Col takes full height */}
-            <Card style={{ width: '100%', height: '100%' }}> {/* Ensure the Card takes full height */}
-              <Card.Body className="d-flex flex-column">
-                <>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Title:</strong>
+
+          <Col md={5}>
+            <Card style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Card.Body>
+                {["title", "year", "released", "runtime", "language", "genre", "director"].map((field) => (
+                  <Row key={field} className="mb-2">
+                    <Col xs={3}><strong>{field.charAt(0).toUpperCase() + field.slice(1)}:</strong></Col>
+                    <Col xs={9}>
+                      <Form.Control
+                        type={field === "runtime" ? "number" : "text"}
+                        name={field}
+                        value={String((film as any)[field])}
+                        readOnly={field === "title" || !isEditing || !isStaff}
+                        onChange={handleChange}
+                      />
                     </Col>
-                    <Col xs={9}>{film.title}</Col>
                   </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Year:</strong>
-                    </Col>
-                    <Col xs={9}>{film.year}</Col>
-                  </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Released:</strong>
-                    </Col>
-                    <Col xs={9}>{film.released}</Col>
-                  </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Runtime:</strong>
-                    </Col>
-                    <Col xs={9}>{film.runtime} minutes</Col>
-                  </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Language:</strong>
-                    </Col>
-                    <Col xs={9}>{film.language}</Col>
-                  </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Genre:</strong>
-                    </Col>
-                    <Col xs={9}>{film.genre}</Col>
-                  </Row>
-                  <Row>
-                    <Col xs={3} className="text-start">
-                      <strong>Director:</strong>
-                    </Col>
-                    <Col xs={9}>{film.director}</Col>
-                  </Row>
-                  {/* Add the "Go back" button at the bottom */}
-                  <div className="mt-auto text-start pt-3">
-                    {/* Use mt-auto to push the button to the bottom */}
-                    <Link to="/" className="btn btn-primary">
-                      Go back
-                    </Link>
-                  </div>
-                </>
+                ))}
+
+                <div className="mt-4 d-flex">
+                  <Link to="/" className="btn btn-outline-primary me-auto">Go back</Link>
+                  {isStaff && (
+                    !isEditing ? (
+                      <Button variant="primary" onClick={handleEdit}>Edit</Button>
+                    ) : (
+                      <>
+                        <Button variant="success" className="ms-2" onClick={confirmUpdate}>Update</Button>
+                        <Button variant="secondary" className="ms-2" onClick={handleCancel}>Cancel</Button>
+                      </>
+                    )
+                  )}
+                </div>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       )}
+
+      {/* Confirm Modal */}
+      <Modal show={showModal} onHide={cancelModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Update</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to add this film to the database?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={cancelModal}>Cancel</Button>
+          <Button variant="primary" onClick={handleUpdate}>Confirm</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Success</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          <p>🎉 Film added successfully!</p>
+          <Button variant="primary" onClick={() => setShowSuccess(false)}>
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

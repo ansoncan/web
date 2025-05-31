@@ -47,7 +47,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         localStorage.setItem('authKey', data.key);
         onLoginSuccess(); // Notify Navbar
         handleClose();
-        navigate('/user-details');
+        navigate('/');
       } else {
         setError('Invalid username or password');
       }
