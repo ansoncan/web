@@ -140,11 +140,13 @@ import defaultImage from '../assets/poster_not_found.png'; // Default image path
 import { baseURL } from '../common/http-common';
 import { Link } from 'react-router-dom';
 import Pagination from 'react-bootstrap/Pagination'; // Import Pagination from react-bootstrap
+import Spinner from 'react-bootstrap/Spinner';
 
 type Film = {
   _id: string;
   title: string;
   year: string;
+  released?: string;
   poster: string | null; // poster can be a string, null, or ''
 };
 
@@ -181,7 +183,11 @@ const Card: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <Spinner animation="grow" variant="secondary" />
+      </div>
+    );
   }
 
   if (error) {
@@ -287,7 +293,7 @@ const Card: React.FC = () => {
                       {film.title.length > 80 ? `${film.title.substring(0, 80)}..` : film.title}
                     </h6>
                     <p className="card-text" style={{ color: 'grey' }}>
-                      {film.year}
+                      {film.released}
                     </p>
                   </div>
                 </div>

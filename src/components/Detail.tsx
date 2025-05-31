@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom'; // Import useParams and Link
 import { baseURL } from '../common/http-common';
 import defaultImage from '../assets/poster_not_found.png'; // Default image path
 import { Container, Row, Col, Card, CardImg } from 'react-bootstrap';
+import Spinner from 'react-bootstrap/Spinner';
 
 // Define a type for the detailed film object
 type DetailedFilm = {
@@ -52,7 +53,11 @@ const Detail: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <div style={{ display: 'none' }}>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <Spinner animation="border" />
+      </div>
+    );
   }
 
   if (error) {
@@ -151,7 +156,7 @@ const Detail: React.FC = () => {
               </Row>
               {/* Add the "Go back" button at the bottom */}
               <div className="mt-auto text-start"> {/* Use mt-auto to push the button to the bottom */}
-                <Link to="/" className="btn btn-primary" style={{ backgroundColor: 'black', color: 'white' }}>
+                <Link to="/" className="btn btn-primary">
                   Go back
                 </Link>
               </div>

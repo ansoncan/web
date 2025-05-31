@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import defaultImage from '../assets/poster_not_found.png';
 import { baseURL } from '../common/http-common';
 import { Link } from 'react-router-dom';
+import Spinner from 'react-bootstrap/Spinner';
 
 type Film = {
   _id: string;
@@ -40,7 +41,11 @@ const FilteredCard: React.FC<FilteredCardProps> = ({ selectedMonth }) => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <Spinner animation="border" />
+      </div>
+    );
   }
 
   if (error) {
@@ -85,7 +90,7 @@ const FilteredCard: React.FC<FilteredCardProps> = ({ selectedMonth }) => {
                       {film.title.length > 80 ? `${film.title.substring(0, 80)}..` : film.title}
                     </h6>
                     <p className="card-text" style={{ color: 'grey' }}>
-                      {film.year}
+                      {film.released}
                     </p>
                   </div>
                 </div>

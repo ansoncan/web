@@ -17,7 +17,15 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
 
   const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  //const handleShow = () => setShow(true);
+
+  const handleShow = () => {
+  setUsername('');
+  setPassword('');
+  setError('');
+  setShow(true);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +94,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button>
+          <Button variant="secondary" onClick={handleClose}>
           Close
           </Button>
           <Button variant="primary" onClick={handleSubmit}>

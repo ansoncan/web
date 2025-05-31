@@ -81,7 +81,7 @@ const Search: React.FC = () => {
             <p>Sorry, we couldn't find any films with the provided wording.</p>
           </div>
           <div className="text-center px-3 pb-3"> {/* Use mt-auto and padding */}
-            <Link to="/" className="btn btn-primary" style={{ backgroundColor: 'black', color: 'white' }}>
+            <Link to="/" className="btn btn-primary">
               Go back
             </Link>
           </div>
@@ -154,7 +154,7 @@ const Search: React.FC = () => {
                   {/* Add the "Go back" button at the bottom */}
                   <div className="mt-auto text-start pt-3">
                     {/* Use mt-auto to push the button to the bottom */}
-                    <Link to="/" className="btn btn-primary" style={{ backgroundColor: 'black', color: 'white' }}>
+                    <Link to="/" className="btn btn-primary">
                       Go back
                     </Link>
                   </div>
