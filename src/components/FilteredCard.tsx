@@ -7,7 +7,7 @@ type Film = {
   _id: string;
   title: string;
   year: string;
-  released: string;
+  released?: string; // Changed to optional
   poster: string | null;
 };
 
@@ -39,12 +39,6 @@ const FilteredCard: React.FC<FilteredCardProps> = ({ selectedMonth }) => {
     fetchData();
   }, []);
 
-  const filteredFilms = films.filter((film) => {
-    if (!selectedMonth) return true;
-    const releasedMonth = film.released.split(' ')[1];
-    return releasedMonth?.toLowerCase() === selectedMonth.toLowerCase().substring(0, 3);
-  });
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -52,6 +46,13 @@ const FilteredCard: React.FC<FilteredCardProps> = ({ selectedMonth }) => {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
+  const filteredFilms = films.filter((film) => {
+    if (!selectedMonth || selectedMonth === 'Select a Month') return true;
+    if (!film.released) return false; // Added check for undefined
+    const releasedMonth = film.released.split(' ')[1];
+    return releasedMonth?.toLowerCase() === selectedMonth.toLowerCase().substring(0, 3);
+  });
 
   console.log('Filtered Films:', filteredFilms);
 

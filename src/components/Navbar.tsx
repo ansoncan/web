@@ -1,31 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useNavigate } from 'react-router-dom';
+import Login from './Login';
 
 interface Props {
-  onMonthChange: (month: string) => void; // Callback to permanently update the filter
-  onClearFilter: () => void; // Callback to clear the filter
+  onMonthChange: (month: string) => void;
+  onClearFilter: () => void;
 }
 
 const Navbar: React.FC<Props> = ({ onMonthChange, onClearFilter }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedMonthTemp, setSelectedMonthTemp] = useState<string | null>(null);
-
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleMonthChange = (eventKey: string | null) => {
-    if (eventKey) {
-      console.log('Selected Month in Navbar (temp):', eventKey);
-      setSelectedMonthTemp(eventKey);
-    }
+  useEffect(() => {
+    const authKey = localStorage.getItem('authKey');
+    setIsLoggedIn(!!authKey);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authKey');
+    setIsLoggedIn(false);
+    setSelectedMonthTemp(null);
+    onClearFilter();
+    setSearchQuery('');
+    navigate('/');
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
   };
 
   const applyFilter = () => {
     if (selectedMonthTemp) {
-      console.log('Applying filter with selected month:', selectedMonthTemp);
-      onMonthChange(selectedMonthTemp);
+      onMonthChange(selectedMonthTemp); // Notify parent of selected month
       navigate('/filtered');
     } else {
       alert('Please select a month before applying the filter.');
@@ -33,7 +44,6 @@ const Navbar: React.FC<Props> = ({ onMonthChange, onClearFilter }) => {
   };
 
   const clearFilter = () => {
-    console.log('Clearing filter');
     setSelectedMonthTemp(null);
     onClearFilter();
     navigate('/');
@@ -49,11 +59,8 @@ const Navbar: React.FC<Props> = ({ onMonthChange, onClearFilter }) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container-fluid">
-        <div className="d-flex align-items-center">
-          <a href="/" className="navbar-brand ms-3">
-            FilmStores
-          </a>
-        </div>
+        <a href="/" className="navbar-brand ms-3">FilmStores</a>
+
         <Form onSubmit={handleSearch} className="d-flex me-auto">
           <Form.Control
             type="search"
@@ -62,52 +69,39 @@ const Navbar: React.FC<Props> = ({ onMonthChange, onClearFilter }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="me-2"
           />
-          <Button variant="outline-success" type="submit">
-            Search
-          </Button>
+          <Button variant="outline-success" type="submit">Search</Button>
         </Form>
-        <Dropdown onSelect={handleMonthChange} className="me-2">
-          <Dropdown.Toggle variant="success" id="dropdown-basic">
-            {selectedMonthTemp || 'Select a Month'}
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            {[
-              'January',
-              'February',
-              'March',
-              'April',
-              'May',
-              'June',
-              'July',
-              'August',
-              'September',
-              'October',
-              'November',
-              'December',
-            ].map((month) => (
-              <Dropdown.Item key={month} eventKey={month}>
-                {month}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-        <Button variant="primary" onClick={applyFilter}>
-          Apply Filter
-        </Button>
-        <Button variant="secondary" className="ms-2 me-5" onClick={clearFilter}>
-          Clear Filter
-        </Button>
-        <div className="d-flex align-items-center">
-          <ul className="navbar-nav me-4">
-            <li className="nav-item">
-              <Button>Login</Button>
-            </li>
-          </ul>
-        </div>
+
+        {!isLoggedIn && (
+          <>
+            <Dropdown onSelect={(eventKey) => eventKey && setSelectedMonthTemp(eventKey)} className="me-2">
+              <Dropdown.Toggle variant="success">
+                {selectedMonthTemp || 'Select a Month'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {[
+                  'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'
+                ].map((month) => (
+                  <Dropdown.Item key={month} eventKey={month}>
+                    {month}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+            <Button variant="primary" onClick={applyFilter}>Apply Filter</Button>
+            <Button variant="secondary" className="ms-2 me-5" onClick={clearFilter}>Clear Filter</Button>
+          </>
+        )}
+
+        {isLoggedIn ? (
+          <Button variant="danger" onClick={handleLogout}>Logout</Button>
+        ) : (
+          <Login onLoginSuccess={handleLoginSuccess} />
+        )}
       </div>
     </nav>
   );
 };
 
 export default Navbar;
-

@@ -1,73 +1,101 @@
-  - url: 'https://pcpdfilm.starsknights.com:18888/api/v2'
+import React, { useState } from 'react';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Modal from 'react-bootstrap/Modal';
+import { baseURL } from '../common/http-common';
+import { useNavigate } from 'react-router-dom';
 
-1.	login feature, it includes user and staff, the API will return a token each time for each login.  
-You should store the token and send the token for each authorization feature. 
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
 
-2.  both account can change password.
-3.	Only staff can access to "Add film page " page, a routing link should be available after login.
-4.	There is one textbox available for staff to input the film name.  
-    The film's detailed information will be loaded once the search button is clicked 
-    through the designated API endpoint.
-5.	The film information should be available for the staff editing 
-    (Film name and poster cannot be changed.)
-6.	There is a cancel button to go back to the film listed 
-page and a save button to all the designated API endpoint to save the 
-film information to the database.
+const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+  const [show, setShow] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-/user:
-    get:
-      tags:
-        - Users
-      description:
-        User Login
-      security:        
-        - basicAuth: []
-      responses:
-        "401":
-          description: Invalid Login
-        "200":
-          description: Login successfully with a key provided
-    put:
-      tags:
-        - Users
-      description:
-        Update user information (Owner account only)
-      parameters:
-        - in: header
-          name: k
-          schema:
-            type: string
-          required: true
-      requestBody:
-        description: Update user information
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: ./user.json#/definitions/user
-      responses:
-        "500":
-          description: Database return errors
-        "200":
-          description: Update successfully
-  /user/detail:
-    get:
-      tags:
-        - Users
-      description:
-        User Details Information
-      security:
-        - basicAuth: []
-      parameters:
-        - in: header
-          name: k
-          schema:
-            type: string
-          required: true
-      responses:
-        "401":
-          description: Invalid Login
-        "200":
-          description: return user lastname and firstname
+    const credentials = `${username}:${password}`;
+    const encodedCredentials = btoa(credentials);
+
+    try {
+      const response = await fetch(`${baseURL}/user`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${encodedCredentials}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('authKey', data.key);
+        onLoginSuccess(); // Notify Navbar
+        handleClose();
+        navigate('/user-details');
+      } else {
+        setError('Invalid username or password');
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+    }
+  };
+
+  return (
+    <>
+      <Button variant="primary" onClick={handleShow}>
+        Login
+      </Button>
+
+      <Modal show={show} onHide={handleClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Login</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3" controlId="formBasicUsername">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button>
+          Close
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Login
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
+
+export default Login;

@@ -1,0 +1,95 @@
+  - url: 'https://pcpdfilm.starsknights.com:18888/api/v2'
+
+  I would like to create some features for the film management system using React and TypeScript. 
+  
+  The features include user login, password change, and staff-only access to add and edit films. 
+  
+  Below are the requirements and API endpoints that need to be implemented:
+
+
+for the login feature, it is for user and staff, the API will return a token each time for each login.  
+the application should store the token and send the token for each authorization feature, 
+i think it is for login. 
+besides, after the login, the existing dropdown and apply button and clear button will be hidden, 
+but occoupy the new element "Change Password", I dont know is it better to create a new navbar for handle this.
+otherwise, the navbar will messy because of the new element,
+both user and staff account can change password, please create a new tsx file, say ChangePW.tsx.
+the layout should include a form with three textboxes for the old password, new password and confirm new password.,
+
+
+for add film features, Only staff account can access to "Add film page " page, 
+a routing link should be available after login and add the element of "Add Film" to the navbar.
+again, i dont know if it is better to create a new navbar for this together with the change,
+please add another tsx file, say AddFilm.tsx to handle the editing and addition features, 
+the layout is same as to the Search.tsx, but with the feature that it allow to edit fields.
+however, Film name and poster cannot be changed. 
+lastly, There is a cancel button to go back to the film listed page and a save button to all the designated API endpoint to save the 
+film information to the database.
+
+overall,the logic and flow is after the staff login and authed, 
+the staff can type the text in the search box and then press search button in navbar, 
+then it will load the the AddFilm.tsx and display the film information,
+there are button to click to edit the film information,
+and the staff can edit the film information and save it by save button to the database.
+
+below is the API endpoint for user login and password change as well as the auth.
+
+
+/user:
+    get:
+      tags:
+        - Users
+      description:
+        User Login
+      security:        
+        - basicAuth: []
+      responses:
+        "401":
+          description: Invalid Login
+        "200":
+          description: Login successfully with a key provided
+    put:
+      tags:
+        - Users
+      description:
+        Update user information (Owner account only)
+      parameters:
+        - in: header
+          name: k
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Update user information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./user.json#/definitions/user
+      responses:
+        "500":
+          description: Database return errors
+        "200":
+          description: Update successfully
+  /user/detail:
+    get:
+      tags:
+        - Users
+      description:
+        User Details Information
+      security:
+        - basicAuth: []
+      parameters:
+        - in: header
+          name: k
+          schema:
+            type: string
+          required: true
+      responses:
+        "401":
+          description: Invalid Login
+        "200":
+          description: return user lastname and firstname
+
+
+
